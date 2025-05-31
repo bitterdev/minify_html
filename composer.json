@@ -1,0 +1,5 @@
+{
+  "name": "bitter/minify_html",
+  "type": "concrete5-package",
+  "description": "Minify HTML output to decrease page load times"
+}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<concrete5-cif version="1.0">
+    <attributekeys>
+        <attributekey handle="disable_html_minification" name="Disable HTML minification" package="minify_html"
+                      searchable="1"
+                      indexed="0" type="boolean"
+                      category="collection"/>
+    </attributekeys>
+
+    <singlepages>
+        <page name="Minify HTML" path="/dashboard/system/optimization/minify_html"
+              filename="/dashboard/system/optimization/minify_html.php"
+              pagetype="" description=""
+              package="minify_html">
+        </page>
+    </singlepages>
+</concrete5-cif>

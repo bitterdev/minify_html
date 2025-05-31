@@ -1,0 +1,5 @@
+.idea/
+vendor/
+build/node_modules
+node_modules
+release/

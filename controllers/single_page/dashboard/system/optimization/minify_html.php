@@ -2,54 +2,47 @@
 
 namespace Concrete\Package\MinifyHtml\Controller\SinglePage\Dashboard\System\Optimization;
 
+use Concrete\Core\Attribute\Exception\InvalidAttributeException;
 use Concrete\Core\Config\Repository\Repository;
 use Concrete\Core\Page\Controller\DashboardPageController;
 use Concrete\Core\Page\PageList;
-use Concrete\Core\Routing\Redirect;
-use Exception;
+use Concrete\Core\Validation\CSRF\Token;
 
-final class MinifyHtml extends DashboardPageController
+class MinifyHtml extends DashboardPageController
 {
     public function view()
-	{
-	    /** @var Repository $config */
-	    $config = $this->app->make(Repository::class);
+    {
+        /** @var Repository $config */
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $config = $this->app->make(Repository::class);
+        /** @var Token $token */
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $token = $this->app->make(Token::class);
 
-	    $this->set('pagesWithMinificationDisabled', $this->getPagesWithMinificationDisabled());
-	    $this->set('status', $config->get('minify_html.settings.status'));
-	    $this->set('enableForRegisteredUsers', $config->get('minify_html.settings.enable_for_registered_users'));
-	}
-	
-	public function save() 
-	{
-		if (!$this->app->make('token')->validate('minify_html.settings')) {
-            $this->error->add($this->app->make('token')->getErrorMessage());
+        if ($this->request->getMethod() === "POST") {
+            if (!$token->validate('update_settings')) {
+                $this->error->add($token->getErrorMessage());
+                return;
+            }
 
-            return;
+            $config->save('minify_html.settings.status', (bool)$this->post('status'));
+            $config->save('minify_html.settings.enable_for_registered_users', (bool)$this->post('enableForRegisteredUsers'));
+
+            $this->flash('success', t('Settings saved'));
         }
 
-        /** @var Repository $config */
-	    $config = $this->app->make(Repository::class);
+        $pagesWithMinificationDisabled = [];
 
-        $config->save('minify_html.settings.status', (bool) $this->post('status'));
-        $config->save('minify_html.settings.enable_for_registered_users', (bool) $this->post('enableForRegisteredUsers'));
+        $pageList = new PageList();
+        try {
+            $pageList->filterByAttribute('disable_html_minification', 1);
+            $pagesWithMinificationDisabled = $pageList->getResults();
+        } catch (InvalidAttributeException) {
+        }
 
-        $this->flash('success', t('Settings saved'));
 
-        return Redirect::to($this->action('view'));
-	}
-
-	/**
-	 * @return \Concrete\Core\Page\Page[]
-	 */
-	private function getPagesWithMinificationDisabled()
-	{
-	    try {
-            $pl = new PageList();
-            $pl->filterByAttribute('disable_html_minification', 1);
-            return $pl->getResults();
-        } catch (Exception $e) { }
-
-        return [];
-	}
+        $this->set('pagesWithMinificationDisabled', $pagesWithMinificationDisabled);
+        $this->set('status', (bool)$config->get('minify_html.settings.status', true));
+        $this->set('enableForRegisteredUsers', (bool)$config->get('minify_html.settings.enable_for_registered_users', false));
+    }
 }
